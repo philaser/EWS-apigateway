@@ -1,0 +1,59 @@
+# This is the api gateway for the Earthquake Warning System.
+# This includes api-gateway service
+
+service: ews-apigateway
+# app and org for use with dashboard.serverless.com
+app: ews
+org: philemonjo
+
+provider:
+  name: aws
+  runtime: python3.8
+  versionFunctions: false
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  tracing:
+    apiGateway: true
+  tags:
+    project: base-template
+    service: api-gateway
+    environment: ${self:provider.stage, 'dev'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+
+custom:
+  pythonRequirements:
+    pythonBin: python3
+
+package:
+  patterns:
+    - '!node_modules/**'
+    - '!venv/**'
+
+resources:
+  Resources:
+    EWSApiGateway:
+      Type: 'AWS::ApiGateway::RestApi'
+      Properties:
+        Name: ${self:provider.stage}-EWSApiGateway
+
+
+  Outputs:
+    EWSApiGatewayId:
+      Value:
+        Ref: EWSApiGateway
+      Export:
+        Name: ${self:provider.stage}-EWSApiGateway-Id
+    EWSApiGatewayRootResourceId:
+      Value:
+        Fn::GetAtt:
+          - EWSApiGateway
+          - RootResourceId
+      Export:
+        Name: ${self:provider.stage}-EWSApiGateway-RootResourceId
